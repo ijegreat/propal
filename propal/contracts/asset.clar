@@ -1,8 +1,6 @@
-;; Propal smart contract: A decentralized proof-of-ownership registry
-
 (define-non-fungible-token property uint)
 
-(define-map property-registry uint 
+(define-map asset uint 
   {
     current-owner: principal,
     property-info: (string-ascii 256),
@@ -34,7 +32,7 @@
     ;; Check if zoning-info is not empty
     (asserts! (> (len zoning-info) u0) (err u408))
     (try! (nft-mint? property new-property-id tx-sender))
-    (map-set property-registry new-property-id
+    (map-set asset new-property-id
       {
         current-owner: tx-sender,
         property-info: property-info,
@@ -52,7 +50,7 @@
 (define-public (transfer-property (property-id uint) (new-owner principal) (digital-signature (buff 65)))
   (let
     (
-      (property-data (unwrap! (map-get? property-registry property-id) (err u404)))
+      (property-data (unwrap! (map-get? asset property-id) (err u404)))
       (current-owner (unwrap! (nft-get-owner? property property-id) (err u404)))
     )
     (asserts! (is-eq tx-sender current-owner) (err u403))
@@ -62,7 +60,7 @@
     (asserts! (> (len digital-signature) u0) (err u406))
     (try! (validate-signature property-id current-owner new-owner digital-signature))
     (try! (nft-transfer? property property-id current-owner new-owner))
-    (map-set property-registry property-id
+    (map-set asset property-id
       (merge property-data { current-owner: new-owner })
     )
     (ok true)
@@ -103,17 +101,25 @@
 
 ;; Function to get property details
 (define-read-only (get-property-details (property-id uint))
-  (map-get? property-registry property-id)
+  (map-get? asset property-id)
+)
+
+;; Function to verify property ownership
+(define-read-only (verify-ownership (property-id uint) (owner principal))
+  (match (map-get? asset property-id)
+    property-info (ok (is-eq (get current-owner property-info) owner))
+    (err u404)
+  )
 )
 
 ;; Function to update property valuation
 (define-public (update-property-valuation (property-id uint) (new-valuation uint))
   (let
     (
-      (property-data (unwrap! (map-get? property-registry property-id) (err u404)))
+      (property-data (unwrap! (map-get? asset property-id) (err u404)))
     )
     (asserts! (is-eq tx-sender (get current-owner property-data)) (err u403))
-    (map-set property-registry property-id
+    (map-set asset property-id
       (merge property-data { valuation: new-valuation })
     )
     (ok true)
@@ -124,11 +130,11 @@
 (define-public (update-geographic-data (property-id uint) (new-geographic-data (string-ascii 256)))
   (let
     (
-      (property-data (unwrap! (map-get? property-registry property-id) (err u404)))
+      (property-data (unwrap! (map-get? asset property-id) (err u404)))
     )
     (asserts! (is-eq tx-sender (get current-owner property-data)) (err u403))
     (asserts! (> (len new-geographic-data) u0) (err u407))
-    (map-set property-registry property-id
+    (map-set asset property-id
       (merge property-data { geographic-data: new-geographic-data })
     )
     (ok true)
@@ -139,11 +145,11 @@
 (define-public (update-zoning-info (property-id uint) (new-zoning-info (string-ascii 100)))
   (let
     (
-      (property-data (unwrap! (map-get? property-registry property-id) (err u404)))
+      (property-data (unwrap! (map-get? asset property-id) (err u404)))
     )
     (asserts! (is-eq tx-sender (get current-owner property-data)) (err u403))
     (asserts! (> (len new-zoning-info) u0) (err u408))
-    (map-set property-registry property-id
+    (map-set asset property-id
       (merge property-data { zoning-info: new-zoning-info })
     )
     (ok true)
@@ -154,13 +160,13 @@
 (define-public (purchase-property (property-id uint) (crypto-tx-hash (buff 32)))
   (let
     (
-      (property-data (unwrap! (map-get? property-registry property-id) (err u404)))
+      (property-data (unwrap! (map-get? asset property-id) (err u404)))
       (seller (unwrap! (nft-get-owner? property property-id) (err u404)))
       (price (get valuation property-data))
     )
     (asserts! (is-valid-crypto-payment? crypto-tx-hash price seller) (err u402))
     (try! (nft-transfer? property property-id seller tx-sender))
-    (map-set property-registry property-id
+    (map-set asset property-id
       (merge property-data { current-owner: tx-sender })
     )
     (ok true)
