@@ -1,164 +1,114 @@
 # Propal Smart Contract
 
+A decentralized blockchain-based property registry system that enables secure ownership tracking and transfer of real estate assets through smart contracts.
+
 ## Overview
-The Propal Smart Contract is a decentralized proof-of-ownership system implemented in Clarity for managing real estate property records on the blockchain. It enables property registration, ownership transfers, and property information management in a secure and transparent manner.
+
+Propal is a non-fungible token (NFT) based property management system that allows for:
+- Registration of property assets with detailed information
+- Secure transfer of property ownership
+- Property valuation updates
+- Geographic and zoning information management
+- Cryptocurrency-based property purchases
 
 ## Features
-- Property registration with detailed information
-- Secure ownership transfers with digital signatures
-- Property valuation management
-- Geographic and zoning information updates
-- Cryptocurrency-based property purchases
+
+### Property Registration
+- Create new property entries with:
+  - Detailed property information
+  - Current valuation
+  - Geographic data
+  - Zoning information
+- Each property is minted as a unique NFT
+- Automatic property ID generation
+
+### Ownership Management
+- Secure transfer of property ownership using digital signatures
 - Ownership verification system
-
-## Contract Functions
-
-### Core Property Management
-
-#### `register-property`
-Registers a new property in the system.
-```clarity
-(register-property 
-  property-info: (string-ascii 256)
-  valuation: uint
-  geographic-data: (string-ascii 256)
-  zoning-info: (string-ascii 100)
-) -> (response uint uint)
-```
-- Returns: Property ID on success, error code on failure
-
-#### `transfer-property`
-Transfers property ownership to a new owner.
-```clarity
-(transfer-property 
-  property-id: uint
-  new-owner: principal
-  digital-signature: (buff 65)
-) -> (response bool uint)
-```
-- Requires digital signature verification
-- Returns: Success/failure status
-
-#### `verify-ownership`
-Verifies if a specific principal owns a property.
-```clarity
-(verify-ownership 
-  property-id: uint
-  owner: principal
-) -> (response bool uint)
-```
-- Returns: True if owner matches, false otherwise
+- Integration with cryptocurrency for property purchases
 
 ### Property Information Management
+- Update property valuations
+- Modify geographic data
+- Update zoning information
+- Retrieve property details
 
-#### `update-property-valuation`
-Updates the property's valuation.
-```clarity
-(update-property-valuation 
-  property-id: uint
-  new-valuation: uint
-) -> (response bool uint)
-```
+## Functions
 
-#### `update-geographic-data`
-Updates property's geographic information.
-```clarity
-(update-geographic-data 
-  property-id: uint
-  new-geographic-data: (string-ascii 256)
-) -> (response bool uint)
-```
+### Public Functions
 
-#### `update-zoning-info`
-Updates property's zoning information.
-```clarity
-(update-zoning-info 
-  property-id: uint
-  new-zoning-info: (string-ascii 100)
-) -> (response bool uint)
-```
+`register-property`
+- Registers a new property in the system
+- Parameters: property-info, valuation, geographic-data, zoning-info
+- Returns: property ID
 
-#### `get-property-details`
-Retrieves all details about a specific property.
-```clarity
-(get-property-details 
-  property-id: uint
-) -> (optional {property-data})
-```
+`transfer-property`
+- Transfers property ownership to a new owner
+- Parameters: property-id, new-owner, digital-signature
+- Requires signature validation
 
-### Property Purchase
+`update-property-valuation`
+- Updates the valuation of an existing property
+- Parameters: property-id, new-valuation
+- Only callable by current owner
 
-#### `purchase-property`
-Facilitates property purchase using cryptocurrency.
-```clarity
-(purchase-property 
-  property-id: uint
-  crypto-tx-hash: (buff 32)
-) -> (response bool uint)
-```
+`update-geographic-data`
+- Updates the geographic data of a property
+- Parameters: property-id, new-geographic-data
+- Only callable by current owner
+
+`update-zoning-info`
+- Updates zoning information
+- Parameters: property-id, new-zoning-info
+- Only callable by current owner
+
+`purchase-property`
+- Facilitates property purchase using cryptocurrency
+- Parameters: property-id, crypto-tx-hash
+- Verifies payment before transfer
+
+### Read-Only Functions
+
+`get-property-details`
+- Retrieves all details of a property
+- Parameters: property-id
+
+`verify-ownership`
+- Verifies if a given principal owns a specific property
+- Parameters: property-id, owner
 
 ## Error Codes
-- `u400`: Invalid valuation (must be greater than 0)
-- `u401`: Invalid property information or signature validation failure
-- `u402`: Invalid cryptocurrency payment or signature recovery error
-- `u403`: Unauthorized action (not the current owner)
+
+- `u400`: Invalid valuation (must be greater than zero)
+- `u401`: Invalid property information or signature validation failed
+- `u402`: Invalid signature or cryptocurrency payment
+- `u403`: Unauthorized access (not the current owner)
 - `u404`: Property not found
-- `u405`: Invalid new owner (same as current owner)
-- `u406`: Invalid digital signature (empty)
-- `u407`: Invalid geographic data (empty)
-- `u408`: Invalid zoning information (empty)
-
-## Data Structures
-
-### Property Registry Entry
-```clarity
-{
-  current-owner: principal,
-  property-info: (string-ascii 256),
-  valuation: uint,
-  geographic-data: (string-ascii 256),
-  zoning-info: (string-ascii 100)
-}
-```
+- `u405`: Invalid transfer (new owner same as current owner)
+- `u406`: Invalid digital signature
+- `u407`: Invalid geographic data
+- `u408`: Invalid zoning information
 
 ## Security Features
-- Digital signature verification for property transfers
-- Owner-only access for property updates
-- Cryptocurrency payment validation
-- Non-fungible token (NFT) based ownership representation
 
-## Usage Examples
+- Digital signature validation for ownership transfers
+- Cryptocurrency payment verification
+- Owner-only access control for updates
+- Non-fungible token (NFT) based ownership tracking
 
-### Registering a New Property
-```clarity
-(register-property 
-  "123 Main St, Floor 3, Unit 301" 
-  u500000 
-  "40.7128°N, 74.0060°W" 
-  "R-1: Residential"
-)
-```
+## Dependencies
 
-### Transferring Property
-```clarity
-(transfer-property 
-  u1 
-  'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7 
-  0x123...
-)
-```
+- Requires a blockchain environment supporting:
+  - NFT functionality
+  - Digital signature validation
+  - Smart contract execution
+  - Cryptocurrency transactions
 
-### Verifying Property Ownership
-```clarity
-(verify-ownership 
-  u1 
-  'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7
-)
-```
+## Future Improvements
 
-## Best Practices
-1. Always verify property ownership before initiating transfers
-2. Keep accurate and up-to-date property information
-3. Maintain secure digital signatures for all transfers
-4. Validate cryptocurrency transactions thoroughly
-5. Regular updates of property valuations and information
+- Implementation of proper cryptocurrency payment validation
+- Addition of property history tracking
+- Support for multiple ownership structures
+- Integration with real-world property databases
+- Enhanced validation for geographic and zoning data
+- Support for property documentation storage

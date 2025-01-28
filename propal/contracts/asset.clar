@@ -1,3 +1,4 @@
+;; Propal smart contract: A decentralized proof-of-ownership registry
 (define-non-fungible-token property uint)
 
 (define-map asset uint 
